@@ -1,0 +1,88 @@
+#build my own tensorflow environment
+FROM tensorflow/tensorflow:latest-py3
+
+ADD sources.list /etc/apt/
+COPY thrift-0.11.0 /root/thrift-0.11.0
+COPY opencv4.0 /root/opencv4.0
+
+#install packages: opencv, keras, cmake, thrift, vim, python packages
+RUN cd ~ \
+&& apt-get -y update \
+&& apt-get -y --no-install-recommends install dialog apt-utils \
+&& apt-get -y install wget tar gawk unzip\
+&& apt-get -y install cmake \
+&& apt-get -y install libsm6 libxrender1 libxext-dev \
+&& python3 -m pip install --upgrade pip \
+# && python3 -m pip install opencv-contrib-python \
+&& pip3 install keras \
+&& pip3 install matplotlib pandas scipy jupyter statsmodels sklearn seaborn six thrift \ 
+&& apt-get -y install python3-tk \
+&& apt-get -y install tmux \
+&& apt-get -y install vim \
+&& apt-get -y install ctags \
+&& apt purge python2.7-minimal \
+&& echo "alias python=python3" >> ~/.bashrc \
+&& apt-get -y install build-essential cmake git libgtk2.0-dev pkg-config libavcodec-dev libavformat-dev libswscale-dev libtbb2 libtbb-dev libjpeg-dev libpng-dev libtiff-dev libjasper-dev libdc1394-22-dev python3-dev python3-numpy \
+&& cd ~/opencv4.0/opencv-4.0.1 \
+&& mkdir build \
+&& cd build \
+&& cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_EXAMPLES=ON -DCMAKE_INSTALL_PREFIX=/usr/local -DOPENCV_EXTRA_MODULES_PATH=/root/opencv4.0/opencv_contrib-4.0.1/modules /root/opencv4.0/opencv-4.0.1 \ 
+&& make -j4 \
+&& make install \
+&& ldconfig \
+&& make clean \
+# && cd .. && rm -rf build \
+&& cd ~ \
+&& rm -rf opencv4.0 \
+&& apt-get -y install automake bison flex g++ git libboost-all-dev libevent-dev libssl-dev libtool make pkg-config python3-all python3-all-dev python3-all-dbg \
+&& cd ~/thrift-0.11.0 \
+&& ./configure \
+&& make -j4 \
+&& make install \
+&& make clean \
+&& cd ~ \
+&& rm -rf thrift-0.11.0 \
+&& apt-get install -y locales \
+&& echo "export LC_ALL="C.UTF-8"" >> /etc/bash.bashrc \
+&& apt-get -y clean all \
+&& apt-get -y autoremove \
+&& rm -rf /var/lib/apt/lists/* \
+&& cd ~ \
+&& touch .vimrc \
+&& echo "set syntax=on" >> .vimrc\
+&& echo "set term=xterm" >> .vimrc\
+&& echo "set nu" >> .vimrc\
+&& echo "set cindent" >> .vimrc\
+&& echo "set tabstop=4" >> .vimrc\
+&& echo "set shiftwidth=4" >> .vimrc\
+&& echo "set expandtab" >> .vimrc\
+&& echo "set autoindent" >> .vimrc\
+&& echo " " >> .vimrc \
+&& echo "let g:netrw_banner = 0" >> .vimrc \
+&& echo "let g:netrw_liststyle = 3" >> .vimrc \
+&& echo "let g:netrw_winsize = 15" >> .vimrc \
+&& echo "let g:netrw_sort_sequence = '[\/]$, *'" >> .vimrc \
+&& echo " " >> .vimrc \
+&& echo "let g:netrw_preview = 1" >> .vimrc \
+&& echo "let g:netrw_browse_split = 4" >> .vimrc \
+&& echo "let g:netrw_altv = 1" >> .vimrc \
+&& echo " " >> .vimrc \
+&& echo "augroup ProjectDrawer" >> .vimrc \
+&& echo "  autocmd!" >> .vimrc \
+&& echo "  autocmd VimEnter * :Vexplore" >> .vimrc \
+&& echo "augroup END" >> .vimrc \
+&& echo " " >> .vimrc \
+&& echo "set autochdir" >> .vimrc \
+&& echo "set cursorline" >> .vimrc \
+&& echo "set tags=tags" >> .vimrc \
+&& echo "nnoremap zz :update<cr>" >> .vimrc \
+&& echo "nnoremap Q :wqa<cr>" >> .vimrc \
+&& echo "colorscheme desert" >> .vimrc \
+&& echo "cd" >> ~/.bashrc
+
+
+
+#EXPOSE 80
+
+#commands to run when docker starts
+CMD cd ~
