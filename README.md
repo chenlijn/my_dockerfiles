@@ -21,6 +21,6 @@ to store Dockerfiles to make docker images
 
 ### 8. If you install packages from source, after you build and make install them, use "make clean" to clean all the intermediate files. Finally remove all source files and tarballs.
 
-### 9. Remove any files unesessary. 
+### 9. Remove any files unesessary, such as the source files build directories and static libraries. 
 
  
