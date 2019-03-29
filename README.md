@@ -21,6 +21,9 @@ to store Dockerfiles to make docker images
 
 ### 8. If you install packages from source, after you build and make install them, use "make clean" to clean all the intermediate files. Finally remove all source files and tarballs.
 
-### 9. Remove any files unesessary, such as the source files build directories and static libraries. 
+### 9. Remove any files unesessary, such as the source files build directories and static libraries, however, not all of the static libraries can be deleted, some are critical for the system.
+ 
+## The Most Import Point !
+After you had created an image, you can use "docker multi-stage build" to change anything you want to, specifically to reduce its size substantially even down to only a hundred MB.
 
  
