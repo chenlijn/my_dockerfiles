@@ -1,0 +1,124 @@
+#build my own tensorflow environment
+FROM cnvidia/cuda:10.0-cudnn7-runtime-centos7 
+
+ADD .vimrc /root/
+COPY software /root/
+
+RUN cd ~ \
+&& yum -y update \ 
+&& yum -y install epel-release \
+&& yum remove -y cmake \
+&& yum remove -y python34 \
+&& yum -y install cmake3 make \
+&& ln -s /usr/bin/cmake3 /usr/bin/cmake \
+&& yum install -y python36 python36-devel python36-pip \
+&& rm -rf /usr/bin/python3 \
+&& ln -s /usr/bin/python3.6 /usr/bin/python3 \
+&& ln -s /usr/bin/pip3.6 /usr/bin/pip3 \
+&& yum -y install gtk2-devel \
+&& rpm --import http://li.nux.ro/download/nux/RPM-GPG-KEY-nux.ro \
+&& rpm -Uvh http://li.nux.ro/download/nux/dextop/el7/x86_64/nux-dextop-release-0-5.el7.nux.noarch.rpm \
+&& yum install -y ffmpeg ffmpeg-devel libpng-devel jasper-devel openexr-devel libwebp-devel libjpeg-turbo-devel freeglut-devel mesa-libGL mesa-libGL-devel libtiff-devel \
+&& yum -y install libdc1394-devel tbb-devel eigen3-devel boost boost-thread boost-devel libv4l-devel gstreamer-plugins-base-devel \
+&& yum groupinstall -y "Development tools" \
+&& yum install -y openssl libevent-devel \
+&& yum install -y gcc-c++ \
+&& cd ~/gcc-installation \
+&& ./install_gcc5.4.0.sh \
+&& echo "export PATH=/usr/local/bin:$PATH" >> ~/.bashrc \
+&& echo "export LD_LIBRARY_PATH=/usr/local/lib64:$LD_LIBRARY_PATH" >> ~/.bashrc \
+&& echo "export CC=/usr/local/bin/gcc" >> ~/.bashrc \
+&& echo "export CXX=/usr/local/bin/g++" >> ~/.bashrc \
+&& source ~/.bashrc \
+&& cd ~/protobuf-3.6.0 \
+&& yum install -y autoconf automake libtool curl g++ \
+&& ./configure \
+&& make -j4 \
+&& make install \
+&& ldconfig \
+&& rm -rf protobuf-3.6.0 \
+# install cuda libraries 
+&& yum install -y install cuda-libraries-dev-10-0 cuda-nvml-dev-10-0 cuda-compat-10-1 \
+&& cp ~/cuda/include/cudnn.h /usr/local/cuda/include -u \
+&& cp ~/cuda/lib64/libcudnn* /usr/local/cuda/lib64 -u \
+&& chmod a+r /usr/local/cuda/include/cudnn.h /usr/local/cuda/lib64/libcudnn* \
+&& cd /usr/local/cuda-10.0/lib64/ \
+&& rm -rf *.a \
+&& cd ~ && rm -rf cuda \
+# install python packages
+&& pip3 install protobuf==3.6.1 pillow matplotlib pandas scipy statsmodels sklearn seaborn six thrift==0.11.0 numpy==1.14.0 \
+&& pip3 install argparse onnx==1.2.1 \
+&& pip3 install ~/mxnet_cu100-1.4.0.post0-py2.py3-none-manylinux1_x86_64.whl \
+&& pip3 install tensorflow-gpu==1.13.1 keras \
+&& pip3 install https://download.pytorch.org/whl/cu100/torch-1.0.1.post2-cp36-cp36m-linux_x86_64.whl \
+&& pip3 install torchvision \
+&& pip3 install dlib networkx==1.11 \
+# install opencv3.4.5
+&& cd ~/opencv3.4/opencv \
+&& mkdir build \
+&& cd build \
+&& cmake3 -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local -DOPENCV_PYTHON3_INSTALL_PATH=/usr/local/lib64/python3.6/site-packages -DPYTHON_DEFAULT_EXECUTABLE=/usr/bin/python3.6 -DENABLE_CXX11=ON -DOPENCV_EXTRA_MODULES_PATH=/root/opencv3.4/opencv_contrib/modules /root/opencv3.4/opencv \ 
+&& make -j4 \
+&& make install \
+&& ldconfig \
+&& cd ~ \
+&& rm -rf opencv3.4 \
+&& pip3 install opencv-python==3.4.5.20 opencv-contrib-python==3.4.5.20 \ 
+# install thrift 
+&& cd ~/boost_1_53_0 \
+&& ./bootstrap.sh \
+&& ./b2 install \
+&& ln -s /usr/local/lib/libboost_unit_test_framework.a /usr/local/lib64/libboost_unit_test_framework.a \
+&& cd .. && rm -rf boost_1_53_0 \
+&& cd ~/thrift-0.11.0 \
+&& yum -y install libevent-devel zlib-devel openssl-devel libtool \
+&& ./bootstrap.sh \
+&& ./configure --with-lua=no \
+&& make -j4 \
+&& make install \
+&& make clean \
+&& cd ~ \
+&& rm -rf thrift-0.11.0 \
+&& yum install -y python2 python2-devel python2-pip \
+&& pip install protobuf==3.6.1 pillow pandas six numpy==1.14.0 \
+&& pip install opencv-python==3.4.5.20 \ 
+# install zookeeper
+&& yum install -y java  \
+&& mv ~/zookeeper-3.4.12 /opt \
+# install dlib v19.16
+&& cd ~/dlib \
+&& mkdir build && cd build \
+&& cmake .. \
+&& cmake --build . --config Release \
+&& make install \
+&& ldconfig \
+&& cd ~ && rm -rf dlib \
+# install others 
+&& yum install -y vim tmux gawk sed \
+&& yum clean all \ 
+&& rm -rf /var/cache/* \
+&& rm -rf /tmp/* \
+&& rm -rf ~/.cache
+
+## install NCNN
+#&& cd ~/ncnn \
+#&& mkdir -p build && cd build \
+#&& cmake -DNCNN_VULKAN=OFF .. \
+#&& make -j4 \
+#&& make install 
+## install dldt enviroment
+#&& cd ~/dldt/inference-engine \
+#&& chmod +x install_dependencies.sh \
+#&& ./install_dependencies.sh \
+#&& mkdir build && cd build \
+#&& cmake -DCMAKE_BUILD_TYPE=Release .. \
+#&& make -j4 \
+#&& make install \
+#&& ldconfig \
+#&& cd ~ && rm -rf dldt \
+
+#EXPOSE 80
+
+WORKDIR /root/
+#commands to run when docker starts
+#CMD cd ~
